@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capitola Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="src/styles/main.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+      <p class="hero__kicker">Welcome to</p>
+      <h1>Capitola!</h1>
+      <p class="hero__subtitle">Catch the best surf & stay on the California coast.</p>
+      <div class="hero__chips">
+        <span class="chip">Surf</span>
+        <span class="chip">Weather</span>
+        <span class="chip">Travel</span>
+      </div>
+    </div>
+    <div class="hero__aside">
+      <div class="pill">75° Sunny</div>
+      <p class="pill__label">Live beach outlook</p>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="section" aria-labelledby="surf-section-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow">Surf Companion</p>
+          <h2 id="surf-section-title">Capitola, CA</h2>
+        </div>
+        <div class="spot-toggle" role="tablist" aria-label="Surf spots">
+          <button class="spot-toggle__btn" data-spot="main" aria-selected="true">Capitola</button>
+          <button class="spot-toggle__btn" data-spot="jetty" aria-selected="false">Capitola Jetty</button>
+          <button class="spot-toggle__btn" data-spot="seabright" aria-selected="false">Seabright Beach</button>
+        </div>
+      </div>
+
+      <div class="grid grid--surf">
+        <article class="card surf-card" aria-live="polite">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Surf Report</p>
+              <h3 class="card__title" id="surf-height">4-6 ft</h3>
+              <p id="surf-condition" class="muted">Fair • Winds: 5 mph WNW</p>
+            </div>
+            <div class="tag">Daily</div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat">
+              <p class="stat__label">Swell</p>
+              <p class="stat__value" id="swell">260° W • 2.9 ft</p>
+            </div>
+            <div class="stat">
+              <p class="stat__label">Wind</p>
+              <p class="stat__value" id="wind">5 mph WNW</p>
+            </div>
+            <div class="stat">
+              <p class="stat__label">Tide</p>
+              <p class="stat__value" id="tide">1.2 ft Rising</p>
+            </div>
+            <div class="stat">
+              <p class="stat__label">Water Temp</p>
+              <p class="stat__value" id="water-temp">59°</p>
+            </div>
+          </div>
+          <p class="placeholder">API placeholder: surf line, wind, tide, and buoy integrations.</p>
+        </article>
+
+        <article class="card hourly-card">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Hourly Forecast</p>
+              <h3 class="card__title">Next 6 hours</h3>
+            </div>
+            <div class="tag tag--accent">Sunny</div>
+          </div>
+          <div class="hourly" id="hourly-forecast" aria-live="polite"></div>
+          <p class="placeholder">API placeholder: weather provider for real-time data.</p>
+        </article>
+
+        <article class="card tide-card">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Tide &amp; Swell</p>
+              <h3 class="card__title">Today</h3>
+            </div>
+            <div class="pill">2-3 ft Primary</div>
+          </div>
+          <div class="tide" id="tide-list"></div>
+          <p class="placeholder">API placeholder: tide charts and swell period feed.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="explore-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow">Explore Capitola</p>
+          <h2 id="explore-title">Nearby Locations</h2>
+        </div>
+        <div class="pill pill--ghost">Guest mode</div>
+      </div>
+      <div class="grid grid--explore">
+        <article class="card map-card">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Interactive Map</p>
+              <h3 class="card__title">Surf &amp; Swim</h3>
+            </div>
+            <div class="tag">Live</div>
+          </div>
+          <div class="map" role="img" aria-label="Map preview with Capitola locations">
+            <div class="map__pin" style="top: 40%; left: 48%">Capitola Beach</div>
+            <div class="map__pin" style="top: 50%; left: 60%">Jetty</div>
+            <div class="map__pin" style="top: 30%; left: 36%">Seabright</div>
+          </div>
+          <div class="legend">
+            <span class="legend__item">Surf Spots</span>
+            <span class="legend__item">Surf Schools</span>
+            <span class="legend__item">Restaurants</span>
+            <span class="legend__item">Hotels</span>
+          </div>
+          <p class="placeholder">API placeholder: interactive map with geolocation and Yelp, lodging, and surf schools.</p>
+        </article>
+
+        <article class="card list-card">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Great for Swim</p>
+              <h3 class="card__title">Beach Picks</h3>
+            </div>
+            <div class="pill">Rotates</div>
+          </div>
+          <ul class="simple-list" id="beach-list"></ul>
+          <p class="placeholder">API placeholder: curated swim-friendly beaches.</p>
+        </article>
+
+        <article class="card list-card">
+          <div class="card__header">
+            <div>
+              <p class="eyebrow">Restaurants</p>
+              <h3 class="card__title">Local Bites</h3>
+            </div>
+            <div class="pill">Favorites</div>
+          </div>
+          <ul class="simple-list" id="restaurant-list"></ul>
+          <p class="placeholder">API placeholder: Yelp and reservation integrations.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="events-title">
+      <div class="section__heading">
+        <div>
+          <p class="eyebrow">Local Events</p>
+          <h2 id="events-title">What&apos;s Happening</h2>
+        </div>
+        <div class="tag tag--accent">This Week</div>
+      </div>
+      <div class="grid grid--events" id="events-list"></div>
+      <p class="placeholder">API placeholder: ticketing, music schedules, and yoga calendars.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Capitola Companion • Modular build ready for surf, weather, and travel APIs.</p>
+  </footer>
+
+  <script src="src/scripts/main.js"></script>
+</body>
+</html>
