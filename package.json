@@ -1,0 +1,8 @@
+{
+  "name": "capitolatest",
+  "version": "1.0.0",
+  "description": "Capitola surf, weather, and travel companion prototype",
+  "scripts": {
+    "test": "echo \"No automated tests yet - visual checks completed\""
+  }
+}
