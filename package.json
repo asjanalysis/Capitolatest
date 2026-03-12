@@ -1,8 +1,8 @@
 {
-  "name": "capitolatest",
-  "version": "1.0.0",
-  "description": "Capitola surf, weather, and travel companion prototype",
+  "name": "pathogen-dominion",
+  "version": "0.1.0",
+  "description": "Static browser strategy game set in a single human host",
   "scripts": {
-    "test": "echo \"No automated tests yet - visual checks completed\""
+    "test": "echo \"Static game: run via python -m http.server and play in browser\""
   }
 }
