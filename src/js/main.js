@@ -56,16 +56,20 @@ function initCodex() {
 }
 
 function bindMapClick() {
-  canvas.addEventListener('click', (e)=> {
+  const handleMapSelection = (clientX, clientY) => {
     if (!state) return;
     const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
-    const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
+    const x = ((clientX - rect.left) * canvas.width) / rect.width;
+    const y = ((clientY - rect.top) * canvas.height) / rect.height;
     const hit = regions.find((r)=>Math.abs(r.x-x)<18 && Math.abs(r.y-y)<12);
     if (hit) {
       state.selectedRegion = hit.id;
       renderAll();
     }
+  };
+
+  canvas.addEventListener('pointerup', (e)=> {
+    handleMapSelection(e.clientX, e.clientY);
   });
 }
 
