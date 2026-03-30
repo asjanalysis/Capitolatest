@@ -1,89 +1,302 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pathogen Dominion</title>
-  <link rel="stylesheet" href="src/css/styles.css" />
-</head>
-<body>
-  <div id="app" class="game-shell">
-    <header class="top-bar panel">
-      <div>
-        <h1>Pathogen Dominion</h1>
-        <p class="subtitle">Turn-based host conquest strategy</p>
-      </div>
-      <div class="top-buttons">
-        <button id="btn-new-game">New Run</button>
-        <button id="btn-save">Save</button>
-        <button id="btn-load">Load</button>
-        <button id="btn-export">Export</button>
-        <label class="import-label">Import <input id="import-file" type="file" accept="application/json" /></label>
-        <button id="btn-settings">Settings</button>
-      </div>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retro Weather Channel</title>
+    <style>
+      :root {
+        --blue-1: #0b2678;
+        --blue-2: #1b3bb8;
+        --panel: #244ecb;
+        --panel-dark: #17379b;
+        --gold: #c19137;
+        --text: #f7f7ff;
+      }
 
-    <main class="main-layout">
-      <section class="map-column panel">
-        <div class="panel-header">
-          <h2>Host Atlas</h2>
-          <button id="btn-end-turn" class="accent">End Turn</button>
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", Verdana, sans-serif;
+        color: var(--text);
+        background:
+          linear-gradient(180deg, rgba(15, 31, 103, 0.92), rgba(8, 18, 70, 0.95)),
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
+          radial-gradient(circle at 20% 20%, #2e5ae4 0, #162f93 30%, #0b1b63 65%, #081341 100%);
+        display: grid;
+        place-items: center;
+        padding: 16px;
+      }
+
+      .tv {
+        width: min(960px, 100%);
+        border: 3px solid #d8d8df;
+        box-shadow: 0 0 0 4px var(--gold), 0 0 0 8px #041046, 0 16px 28px rgba(0, 0, 0, 0.45);
+        background: linear-gradient(180deg, #17379b, #1f46be 45%, #17379b);
+      }
+
+      .topbar {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        border-bottom: 3px solid var(--gold);
+        padding: 8px 12px;
+        background: linear-gradient(90deg, #0b2577, #1f43ba);
+      }
+
+      .logo {
+        width: 84px;
+        height: 70px;
+        border: 2px solid #f3f3f8;
+        background: linear-gradient(180deg, #1a49cd, #0f2f87);
+        display: grid;
+        place-items: center;
+        text-align: center;
+        font-weight: 900;
+        line-height: 1;
+        font-size: 14px;
+      }
+
+      .header-text { flex: 1; }
+      .title { font-size: clamp(1rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: 0.04em; }
+      .subtitle { opacity: 0.9; font-size: 0.9rem; }
+      .clock { text-align: right; font-family: "Courier New", monospace; font-weight: 700; }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+        border-bottom: 2px solid var(--gold);
+        background: linear-gradient(180deg, #12328f, #1a3da9);
+      }
+
+      input, button {
+        border: 2px solid #e8e8f2;
+        background: #2f58ce;
+        color: #fff;
+        padding: 8px 10px;
+        font-size: 0.95rem;
+      }
+      input { width: 180px; }
+      button { cursor: pointer; font-weight: 700; }
+      button:hover { filter: brightness(1.1); }
+
+      .forecast {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .card {
+        border: 2px solid #dcdceb;
+        box-shadow: inset 0 0 0 2px rgba(17, 39, 122, 0.85);
+        background: linear-gradient(180deg, #5f81f0 0%, #345acb 40%, #263ca6 100%);
+        text-align: center;
+        padding: 8px;
+      }
+      .day { font-size: 1.2rem; font-weight: 700; }
+      .icon { font-size: 2.2rem; margin: 4px 0; }
+      .desc { min-height: 2.5em; font-size: 0.95rem; }
+      .temps { display: flex; justify-content: space-around; font-size: 1.05rem; font-weight: 700; }
+
+      .status {
+        border-top: 2px solid var(--gold);
+        padding: 10px 12px;
+        background: #102879;
+        font-family: "Courier New", monospace;
+        min-height: 42px;
+      }
+
+      .blink { animation: blink 1.2s step-start infinite; }
+      @keyframes blink { 50% { opacity: 0.4; } }
+    </style>
+  </head>
+  <body>
+    <main class="tv" aria-live="polite">
+      <header class="topbar">
+        <div class="logo">THE<br />WEATHER<br />CHANNEL</div>
+        <div class="header-text">
+          <div class="title" id="locationTitle">U.S. Local Weather</div>
+          <div class="subtitle">Current Conditions + 5-Day Forecast</div>
         </div>
-        <canvas id="map-canvas" width="640" height="448" aria-label="Body map"></canvas>
-        <p class="hint">Click a region to inspect and issue spread actions.</p>
+        <div class="clock" id="clock">--:--:--</div>
+      </header>
+
+      <section class="controls">
+        <input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code" />
+        <button id="fetchBtn">Get Forecast</button>
+        <button id="musicBtn">Play Ambient Tone</button>
       </section>
 
-      <section class="right-column">
-        <article class="panel" id="host-status-panel"></article>
-        <article class="panel" id="pathogen-panel"></article>
-        <article class="panel" id="region-panel"></article>
-        <article class="panel" id="actions-panel"></article>
-      </section>
+      <section class="forecast" id="forecast"></section>
+      <footer class="status" id="status">ENTER A U.S. ZIP CODE TO BEGIN<span class="blink">_</span></footer>
     </main>
 
-    <section class="bottom-layout">
-      <article class="panel log-panel">
-        <div class="panel-header"><h3>Turn Log</h3></div>
-        <div id="log-feed"></div>
-      </article>
-      <article class="panel research-panel">
-        <div class="panel-header"><h3>Adaptation Tree</h3></div>
-        <div id="research-list"></div>
-      </article>
-      <article class="panel codex-panel">
-        <div class="panel-header">
-          <h3>Codex</h3>
-          <select id="codex-topic"></select>
-        </div>
-        <div id="codex-content"></div>
-      </article>
-    </section>
-  </div>
+    <script>
+      const zipEl = document.getElementById("zip");
+      const btnEl = document.getElementById("fetchBtn");
+      const musicBtn = document.getElementById("musicBtn");
+      const forecastEl = document.getElementById("forecast");
+      const statusEl = document.getElementById("status");
+      const locationTitle = document.getElementById("locationTitle");
 
-  <div id="menu-modal" class="modal open">
-    <div class="modal-card panel">
-      <h2>Select Pathogen Archetype</h2>
-      <p>Choose a biologically distinct faction and begin from its preferred entry niche.</p>
-      <div id="faction-options" class="faction-grid"></div>
-      <button id="btn-start-game" class="accent" disabled>Start Infection</button>
-    </div>
-  </div>
+      const weatherCodeMap = {
+        0: ["Clear", "☀️"],
+        1: ["Mostly Clear", "🌤️"],
+        2: ["Partly Cloudy", "⛅"],
+        3: ["Cloudy", "☁️"],
+        45: ["Fog", "🌫️"],
+        48: ["Rime Fog", "🌫️"],
+        51: ["Light Drizzle", "🌦️"],
+        53: ["Drizzle", "🌦️"],
+        55: ["Heavy Drizzle", "🌧️"],
+        61: ["Light Rain", "🌦️"],
+        63: ["Rain", "🌧️"],
+        65: ["Heavy Rain", "🌧️"],
+        71: ["Light Snow", "🌨️"],
+        73: ["Snow", "🌨️"],
+        75: ["Heavy Snow", "❄️"],
+        80: ["Rain Showers", "🌦️"],
+        81: ["Showers", "🌧️"],
+        82: ["Heavy Showers", "⛈️"],
+        95: ["Thunderstorm", "⛈️"],
+        96: ["Storm + Hail", "⛈️"],
+        99: ["Severe Storm", "⛈️"],
+      };
 
-  <div id="settings-modal" class="modal">
-    <div class="modal-card panel">
-      <h2>Settings</h2>
-      <label>Difficulty
-        <select id="difficulty-select">
-          <option value="standard">Standard</option>
-          <option value="harsh">Harsh Immunity</option>
-          <option value="lenient">Lenient Host</option>
-        </select>
-      </label>
-      <label><input type="checkbox" id="scanline-toggle" /> Scanline Overlay</label>
-      <button id="btn-close-settings">Close</button>
-    </div>
-  </div>
+      function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").textContent = now.toLocaleTimeString("en-US", {
+          hour12: true,
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
 
-  <script type="module" src="src/js/main.js"></script>
-</body>
+      function setStatus(text) { statusEl.textContent = text; }
+
+      async function fetchWeather(zip) {
+        setStatus(`LOOKING UP ZIP ${zip}...`);
+        forecastEl.innerHTML = "";
+
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${zip}&country=US&count=1&language=en&format=json`;
+        const geoRes = await fetch(geoUrl);
+        if (!geoRes.ok) throw new Error("Unable to reach geocoding service.");
+        const geo = await geoRes.json();
+        const place = geo.results?.[0];
+        if (!place) throw new Error("ZIP not found. Try a valid U.S. ZIP code.");
+
+        const { latitude, longitude, name, admin1 } = place;
+        locationTitle.textContent = `${name}, ${admin1} Weather`;
+
+        const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=6`;
+        const wRes = await fetch(wUrl);
+        if (!wRes.ok) throw new Error("Unable to reach forecast service.");
+        return wRes.json();
+      }
+
+      function renderForecast(data) {
+        const currentCode = data.current.weather_code;
+        const [currentText] = weatherCodeMap[currentCode] || ["Unknown", "❔"];
+        const current = data.current;
+        setStatus(
+          `NOW ${Math.round(current.temperature_2m)}°F (${currentText}) | FEELS ${Math.round(current.apparent_temperature)}°F | WIND ${Math.round(current.wind_speed_10m)} MPH | BAROMETRIC PRESSURE ${current.surface_pressure.toFixed(0)} hPa`
+        );
+
+        const days = data.daily.time;
+        const html = days.slice(1, 6).map((date, i) => {
+          const code = data.daily.weather_code[i + 1];
+          const [desc, icon] = weatherCodeMap[code] || ["Unknown", "❔"];
+          const hi = Math.round(data.daily.temperature_2m_max[i + 1]);
+          const lo = Math.round(data.daily.temperature_2m_min[i + 1]);
+          const day = new Date(date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+
+          return `
+            <article class="card">
+              <div class="day">${day}</div>
+              <div class="icon" aria-hidden="true">${icon}</div>
+              <div class="desc">${desc}</div>
+              <div class="temps"><span>LO ${lo}</span><span>HI ${hi}</span></div>
+            </article>
+          `;
+        }).join("");
+
+        forecastEl.innerHTML = html;
+      }
+
+      btnEl.addEventListener("click", async () => {
+        const zip = zipEl.value.trim();
+        if (!/^\d{5}$/.test(zip)) {
+          setStatus("PLEASE ENTER A VALID 5-DIGIT U.S. ZIP CODE");
+          return;
+        }
+
+        try {
+          const data = await fetchWeather(zip);
+          renderForecast(data);
+        } catch (err) {
+          setStatus(`ERROR: ${err.message}`);
+        }
+      });
+
+      zipEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btnEl.click();
+      });
+
+      let audioCtx, masterGain, toneA, toneB;
+      function startAmbient() {
+        if (!audioCtx) {
+          audioCtx = new AudioContext();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.015;
+          masterGain.connect(audioCtx.destination);
+
+          toneA = audioCtx.createOscillator();
+          toneB = audioCtx.createOscillator();
+          toneA.type = "sine";
+          toneB.type = "triangle";
+          toneA.frequency.value = 220;
+          toneB.frequency.value = 329.63;
+
+          const gainA = audioCtx.createGain();
+          const gainB = audioCtx.createGain();
+          gainA.gain.value = 0.6;
+          gainB.gain.value = 0.4;
+
+          toneA.connect(gainA).connect(masterGain);
+          toneB.connect(gainB).connect(masterGain);
+          toneA.start();
+          toneB.start();
+
+          setInterval(() => {
+            if (!audioCtx || audioCtx.state !== "running") return;
+            const t = audioCtx.currentTime;
+            toneA.frequency.exponentialRampToValueAtTime(196 + Math.random() * 40, t + 2.8);
+            toneB.frequency.exponentialRampToValueAtTime(293 + Math.random() * 60, t + 2.8);
+          }, 3000);
+        } else {
+          audioCtx.resume();
+        }
+        musicBtn.textContent = "Pause Ambient Tone";
+      }
+
+      function pauseAmbient() {
+        if (audioCtx) audioCtx.suspend();
+        musicBtn.textContent = "Play Ambient Tone";
+      }
+
+      musicBtn.addEventListener("click", async () => {
+        if (!audioCtx || audioCtx.state !== "running") startAmbient();
+        else pauseAmbient();
+      });
+    </script>
+  </body>
 </html>
