@@ -128,8 +128,9 @@
 
       <section class="controls">
         <input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code" />
+        <input id="apiKey" type="password" placeholder="WeatherAPI key" />
         <button id="fetchBtn">Get Forecast</button>
-        <button id="musicBtn">Play Ambient Tone</button>
+        <button id="musicBtn">Play MIDI Music</button>
       </section>
 
       <section class="forecast" id="forecast"></section>
@@ -140,33 +141,15 @@
       const zipEl = document.getElementById("zip");
       const btnEl = document.getElementById("fetchBtn");
       const musicBtn = document.getElementById("musicBtn");
+      const apiKeyEl = document.getElementById("apiKey");
       const forecastEl = document.getElementById("forecast");
       const statusEl = document.getElementById("status");
       const locationTitle = document.getElementById("locationTitle");
 
-      const weatherCodeMap = {
-        0: ["Clear", "☀️"],
-        1: ["Mostly Clear", "🌤️"],
-        2: ["Partly Cloudy", "⛅"],
-        3: ["Cloudy", "☁️"],
-        45: ["Fog", "🌫️"],
-        48: ["Rime Fog", "🌫️"],
-        51: ["Light Drizzle", "🌦️"],
-        53: ["Drizzle", "🌦️"],
-        55: ["Heavy Drizzle", "🌧️"],
-        61: ["Light Rain", "🌦️"],
-        63: ["Rain", "🌧️"],
-        65: ["Heavy Rain", "🌧️"],
-        71: ["Light Snow", "🌨️"],
-        73: ["Snow", "🌨️"],
-        75: ["Heavy Snow", "❄️"],
-        80: ["Rain Showers", "🌦️"],
-        81: ["Showers", "🌧️"],
-        82: ["Heavy Showers", "⛈️"],
-        95: ["Thunderstorm", "⛈️"],
-        96: ["Storm + Hail", "⛈️"],
-        99: ["Severe Storm", "⛈️"],
-      };
+      apiKeyEl.value = localStorage.getItem("weatherApiKey") || "";
+      apiKeyEl.addEventListener("change", () => {
+        localStorage.setItem("weatherApiKey", apiKeyEl.value.trim());
+      });
 
       function updateClock() {
         const now = new Date();
@@ -184,45 +167,40 @@
       function setStatus(text) { statusEl.textContent = text; }
 
       async function fetchWeather(zip) {
+        const apiKey = apiKeyEl.value.trim();
+        if (!apiKey) throw new Error("Enter a WeatherAPI key first.");
+        localStorage.setItem("weatherApiKey", apiKey);
         setStatus(`LOOKING UP ZIP ${zip}...`);
         forecastEl.innerHTML = "";
-
-        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${zip}&country=US&count=1&language=en&format=json`;
-        const geoRes = await fetch(geoUrl);
-        if (!geoRes.ok) throw new Error("Unable to reach geocoding service.");
-        const geo = await geoRes.json();
-        const place = geo.results?.[0];
-        if (!place) throw new Error("ZIP not found. Try a valid U.S. ZIP code.");
-
-        const { latitude, longitude, name, admin1 } = place;
-        locationTitle.textContent = `${name}, ${admin1} Weather`;
-
-        const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=6`;
+        const wUrl = `https://api.weatherapi.com/v1/forecast.json?key=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(zip)}&days=6&aqi=no&alerts=no`;
         const wRes = await fetch(wUrl);
         if (!wRes.ok) throw new Error("Unable to reach forecast service.");
-        return wRes.json();
+        const payload = await wRes.json();
+        if (payload.error) throw new Error(payload.error.message || "Unable to fetch weather.");
+        return payload;
       }
 
       function renderForecast(data) {
-        const currentCode = data.current.weather_code;
-        const [currentText] = weatherCodeMap[currentCode] || ["Unknown", "❔"];
         const current = data.current;
+        const currentText = current.condition?.text || "Unknown";
+        const place = data.location;
+        locationTitle.textContent = `${place.name}, ${place.region} Weather`;
         setStatus(
-          `NOW ${Math.round(current.temperature_2m)}°F (${currentText}) | FEELS ${Math.round(current.apparent_temperature)}°F | WIND ${Math.round(current.wind_speed_10m)} MPH | BAROMETRIC PRESSURE ${current.surface_pressure.toFixed(0)} hPa`
+          `NOW ${Math.round(current.temp_f)}°F (${currentText}) | FEELS ${Math.round(current.feelslike_f)}°F | WIND ${Math.round(current.wind_mph)} MPH | BAROMETRIC PRESSURE ${current.pressure_mb.toFixed(0)} hPa`
         );
 
-        const days = data.daily.time;
-        const html = days.slice(1, 6).map((date, i) => {
-          const code = data.daily.weather_code[i + 1];
-          const [desc, icon] = weatherCodeMap[code] || ["Unknown", "❔"];
-          const hi = Math.round(data.daily.temperature_2m_max[i + 1]);
-          const lo = Math.round(data.daily.temperature_2m_min[i + 1]);
-          const day = new Date(date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+        const days = data.forecast.forecastday;
+        const html = days.slice(1, 6).map((item) => {
+          const desc = item.day.condition?.text || "Unknown";
+          const iconUrl = item.day.condition?.icon ? `https:${item.day.condition.icon}` : "";
+          const hi = Math.round(item.day.maxtemp_f);
+          const lo = Math.round(item.day.mintemp_f);
+          const day = new Date(item.date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
 
           return `
             <article class="card">
               <div class="day">${day}</div>
-              <div class="icon" aria-hidden="true">${icon}</div>
+              <div class="icon" aria-hidden="true">${iconUrl ? `<img src="${iconUrl}" alt="" width="48" height="48" />` : "❔"}</div>
               <div class="desc">${desc}</div>
               <div class="temps"><span>LO ${lo}</span><span>HI ${hi}</span></div>
             </article>
@@ -251,50 +229,26 @@
         if (e.key === "Enter") btnEl.click();
       });
 
-      let audioCtx, masterGain, toneA, toneB;
+      let midiAudio;
       function startAmbient() {
-        if (!audioCtx) {
-          audioCtx = new AudioContext();
-          masterGain = audioCtx.createGain();
-          masterGain.gain.value = 0.015;
-          masterGain.connect(audioCtx.destination);
-
-          toneA = audioCtx.createOscillator();
-          toneB = audioCtx.createOscillator();
-          toneA.type = "sine";
-          toneB.type = "triangle";
-          toneA.frequency.value = 220;
-          toneB.frequency.value = 329.63;
-
-          const gainA = audioCtx.createGain();
-          const gainB = audioCtx.createGain();
-          gainA.gain.value = 0.6;
-          gainB.gain.value = 0.4;
-
-          toneA.connect(gainA).connect(masterGain);
-          toneB.connect(gainB).connect(masterGain);
-          toneA.start();
-          toneB.start();
-
-          setInterval(() => {
-            if (!audioCtx || audioCtx.state !== "running") return;
-            const t = audioCtx.currentTime;
-            toneA.frequency.exponentialRampToValueAtTime(196 + Math.random() * 40, t + 2.8);
-            toneB.frequency.exponentialRampToValueAtTime(293 + Math.random() * 60, t + 2.8);
-          }, 3000);
-        } else {
-          audioCtx.resume();
+        if (!midiAudio) {
+          midiAudio = new Audio("https://onlinesequencer.net/4778297.mid");
+          midiAudio.loop = true;
+          midiAudio.volume = 0.3;
         }
-        musicBtn.textContent = "Pause Ambient Tone";
+        midiAudio.play().catch(() => {
+          setStatus("MIDI playback failed. Your browser may not support .mid audio streaming.");
+        });
+        musicBtn.textContent = "Pause MIDI Music";
       }
 
       function pauseAmbient() {
-        if (audioCtx) audioCtx.suspend();
-        musicBtn.textContent = "Play Ambient Tone";
+        if (midiAudio) midiAudio.pause();
+        musicBtn.textContent = "Play MIDI Music";
       }
 
       musicBtn.addEventListener("click", async () => {
-        if (!audioCtx || audioCtx.state !== "running") startAmbient();
+        if (!midiAudio || midiAudio.paused) startAmbient();
         else pauseAmbient();
       });
     </script>
