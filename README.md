@@ -13,8 +13,8 @@ A single-page weather app styled after a classic 1990s Weather Channel screen.
 - [WeatherAPI Forecast API](https://www.weatherapi.com/docs/)
 
 ## Run
-1. Set your WeatherAPI key as an environment variable (server-side only):
-   - `WEATHER_API_KEY=711443e6b1264864b0f192935250901`
+1. Set your WeatherAPI key as an environment variable (server-side only). The server accepts `WEATHER_API_KEY` and also tolerates accidental values like `WEATHER_API_KEY=...`:
+   - `WEATHER_API_KEY=your_real_weatherapi_key_here`
 2. Start the app:
    - `npm start`
 3. Open `http://localhost:3000`.
