@@ -1,0 +1,9 @@
+{
+  "name": "retro-weather-channel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Retro Weather Channel app with server-side WeatherAPI proxy",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

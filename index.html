@@ -128,7 +128,6 @@
 
       <section class="controls">
         <input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code" />
-        <input id="apiKey" type="password" placeholder="WeatherAPI key" />
         <button id="fetchBtn">Get Forecast</button>
         <button id="musicBtn">Play MIDI Music</button>
       </section>
@@ -141,15 +140,9 @@
       const zipEl = document.getElementById("zip");
       const btnEl = document.getElementById("fetchBtn");
       const musicBtn = document.getElementById("musicBtn");
-      const apiKeyEl = document.getElementById("apiKey");
       const forecastEl = document.getElementById("forecast");
       const statusEl = document.getElementById("status");
       const locationTitle = document.getElementById("locationTitle");
-
-      apiKeyEl.value = localStorage.getItem("weatherApiKey") || "";
-      apiKeyEl.addEventListener("change", () => {
-        localStorage.setItem("weatherApiKey", apiKeyEl.value.trim());
-      });
 
       function updateClock() {
         const now = new Date();
@@ -167,17 +160,14 @@
       function setStatus(text) { statusEl.textContent = text; }
 
       async function fetchWeather(zip) {
-        const apiKey = apiKeyEl.value.trim();
-        if (!apiKey) throw new Error("Enter a WeatherAPI key first.");
-        localStorage.setItem("weatherApiKey", apiKey);
         setStatus(`LOOKING UP ZIP ${zip}...`);
         forecastEl.innerHTML = "";
-        const wUrl = `https://api.weatherapi.com/v1/forecast.json?key=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(zip)}&days=6&aqi=no&alerts=no`;
-        const wRes = await fetch(wUrl);
-        if (!wRes.ok) throw new Error("Unable to reach forecast service.");
-        const payload = await wRes.json();
-        if (payload.error) throw new Error(payload.error.message || "Unable to fetch weather.");
-        return payload;
+        const wRes = await fetch(`/api/weather?zip=${encodeURIComponent(zip)}`);
+        if (!wRes.ok) {
+          const errorPayload = await wRes.json().catch(() => ({}));
+          throw new Error(errorPayload.error || "Unable to reach forecast service.");
+        }
+        return wRes.json();
       }
 
       function renderForecast(data) {
