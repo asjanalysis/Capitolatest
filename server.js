@@ -55,50 +55,70 @@ async function readJsonSafely(response) {
   }
 }
 
+function buildForecastUrl(zip, apiKey, days) {
+  return `https://api.weatherapi.com/v1/forecast.json?key=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(zip)}&days=${days}&aqi=no&alerts=no`;
+}
+
 async function fetchForecastFromUpstream(zip, apiKey) {
-  const upstreamUrl = `https://api.weatherapi.com/v1/forecast.json?key=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(zip)}&days=6&aqi=no&alerts=no`;
+  const forecastDayCandidates = [6, 5, 3];
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), WEATHER_UPSTREAM_TIMEOUT_MS);
+  for (const days of forecastDayCandidates) {
+    const upstreamUrl = buildForecastUrl(zip, apiKey, days);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), WEATHER_UPSTREAM_TIMEOUT_MS);
 
-  try {
-    const upstreamRes = await fetch(upstreamUrl, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-      },
-    });
+    try {
+      const upstreamRes = await fetch(upstreamUrl, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
 
-    const payload = await readJsonSafely(upstreamRes);
+      const payload = await readJsonSafely(upstreamRes);
 
-    if (!upstreamRes.ok || payload.error) {
+      if (upstreamRes.ok && !payload.error) {
+        return { ok: true, payload };
+      }
+
       const message = payload?.error?.message || 'Unable to fetch weather.';
+      const daysLimitMessage = /days/i.test(message);
+      const hasFallbackCandidate = days !== forecastDayCandidates[forecastDayCandidates.length - 1];
+
+      if (upstreamRes.status === 400 && daysLimitMessage && hasFallbackCandidate) {
+        continue;
+      }
+
       return {
         ok: false,
         status: upstreamRes.ok ? 502 : upstreamRes.status,
         message,
       };
-    }
+    } catch (error) {
+      if (error && error.name === 'AbortError') {
+        return {
+          ok: false,
+          status: 504,
+          message: 'Weather service timed out. Please try again.',
+        };
+      }
 
-    return { ok: true, payload };
-  } catch (error) {
-    if (error && error.name === 'AbortError') {
       return {
         ok: false,
-        status: 504,
-        message: 'Weather service timed out. Please try again.',
+        status: 502,
+        message: 'Weather service request failed.',
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    return {
-      ok: false,
-      status: 502,
-      message: 'Weather service request failed.',
-    };
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  return {
+    ok: false,
+    status: 502,
+    message: 'Unable to fetch weather.',
+  };
 }
 
 async function handleWeatherRequest(req, res, reqUrl) {
