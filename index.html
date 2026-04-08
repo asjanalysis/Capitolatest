@@ -3,244 +3,339 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Retro Weather Channel</title>
+    <title>Operation: Trauma Shift</title>
     <style>
       :root {
-        --blue-1: #0b2678;
-        --blue-2: #1b3bb8;
-        --panel: #244ecb;
-        --panel-dark: #17379b;
-        --gold: #c19137;
-        --text: #f7f7ff;
+        --bg: #0e1320;
+        --panel: #1a2236;
+        --panel-2: #222d48;
+        --ok: #56d364;
+        --warn: #f2cc60;
+        --danger: #f85149;
+        --text: #e9edf8;
       }
-
       * { box-sizing: border-box; }
-
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Trebuchet MS", Verdana, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #1d2842, var(--bg));
         color: var(--text);
-        background:
-          linear-gradient(180deg, rgba(15, 31, 103, 0.92), rgba(8, 18, 70, 0.95)),
-          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
-          radial-gradient(circle at 20% 20%, #2e5ae4 0, #162f93 30%, #0b1b63 65%, #081341 100%);
+        font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
         display: grid;
         place-items: center;
-        padding: 16px;
+        padding: 18px;
       }
-
-      .tv {
-        width: min(960px, 100%);
-        border: 3px solid #d8d8df;
-        box-shadow: 0 0 0 4px var(--gold), 0 0 0 8px #041046, 0 16px 28px rgba(0, 0, 0, 0.45);
-        background: linear-gradient(180deg, #17379b, #1f46be 45%, #17379b);
-      }
-
-      .topbar {
-        display: flex;
-        gap: 14px;
-        align-items: center;
-        border-bottom: 3px solid var(--gold);
-        padding: 8px 12px;
-        background: linear-gradient(90deg, #0b2577, #1f43ba);
-      }
-
-      .logo {
-        width: 84px;
-        height: 70px;
-        border: 2px solid #f3f3f8;
-        background: linear-gradient(180deg, #1a49cd, #0f2f87);
+      .game {
+        width: min(980px, 100%);
         display: grid;
-        place-items: center;
-        text-align: center;
-        font-weight: 900;
-        line-height: 1;
-        font-size: 14px;
+        grid-template-columns: 280px 1fr;
+        gap: 16px;
       }
-
-      .header-text { flex: 1; }
-      .title { font-size: clamp(1rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: 0.04em; }
-      .subtitle { opacity: 0.9; font-size: 0.9rem; }
-      .clock { text-align: right; font-family: "Courier New", monospace; font-weight: 700; }
-
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 10px;
-        border-bottom: 2px solid var(--gold);
-        background: linear-gradient(180deg, #12328f, #1a3da9);
+      .panel {
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid #3a4a70;
+        border-radius: 14px;
+        box-shadow: 0 12px 35px rgba(0,0,0,.35);
       }
-
-      input, button {
-        border: 2px solid #e8e8f2;
-        background: #2f58ce;
-        color: #fff;
-        padding: 8px 10px;
-        font-size: 0.95rem;
+      .hud { padding: 14px; }
+      h1 { margin: 0 0 10px; font-size: 1.2rem; }
+      .meter {
+        background: #121a2a;
+        border: 1px solid #3c4a6f;
+        border-radius: 999px;
+        height: 16px;
+        overflow: hidden;
       }
-      input { width: 180px; }
-      button { cursor: pointer; font-weight: 700; }
-      button:hover { filter: brightness(1.1); }
-
-      .forecast {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 12px;
-        padding: 14px;
-      }
-
-      .card {
-        border: 2px solid #dcdceb;
-        box-shadow: inset 0 0 0 2px rgba(17, 39, 122, 0.85);
-        background: linear-gradient(180deg, #5f81f0 0%, #345acb 40%, #263ca6 100%);
-        text-align: center;
-        padding: 8px;
-      }
-      .day { font-size: 1.2rem; font-weight: 700; }
-      .icon { font-size: 2.2rem; margin: 4px 0; }
-      .desc { min-height: 2.5em; font-size: 0.95rem; }
-      .temps { display: flex; justify-content: space-around; font-size: 1.05rem; font-weight: 700; }
-
+      .bar { height: 100%; width: 100%; background: linear-gradient(90deg, var(--ok), var(--warn), var(--danger)); transition: width .18s linear; }
+      .row { margin: 10px 0; }
+      .label { font-size: .88rem; opacity: .9; margin-bottom: 5px; }
+      ul { margin: 8px 0; padding-left: 18px; }
+      li { margin: 4px 0; }
       .status {
-        border-top: 2px solid var(--gold);
-        padding: 10px 12px;
-        background: #102879;
-        font-family: "Courier New", monospace;
-        min-height: 42px;
+        margin-top: 12px;
+        min-height: 78px;
+        background: #11192a;
+        border: 1px solid #33466f;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: .92rem;
       }
-
-      .blink { animation: blink 1.2s step-start infinite; }
-      @keyframes blink { 50% { opacity: 0.4; } }
+      button {
+        width: 100%;
+        margin-top: 12px;
+        background: #3258d3;
+        color: #fff;
+        border: 0;
+        border-radius: 10px;
+        padding: 10px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      canvas {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        display: block;
+        background: #070b13;
+        border-radius: 14px;
+        cursor: crosshair;
+      }
+      .tip { font-size: .82rem; opacity: .8; margin-top: 8px; }
+      @media (max-width: 860px) { .game { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
-    <main class="tv" aria-live="polite">
-      <header class="topbar">
-        <div class="logo">THE<br />WEATHER<br />CHANNEL</div>
-        <div class="header-text">
-          <div class="title" id="locationTitle">U.S. Local Weather</div>
-          <div class="subtitle">Current Conditions + 5-Day Forecast</div>
+    <main class="game">
+      <section class="panel hud">
+        <h1>Operation: Trauma Shift</h1>
+        <div class="row">
+          <div class="label">Patient Health</div>
+          <div class="meter"><div id="healthBar" class="bar"></div></div>
         </div>
-        <div class="clock" id="clock">--:--:--</div>
-      </header>
-
-      <section class="controls">
-        <input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code" />
-        <button id="fetchBtn">Get Forecast</button>
-        <button id="musicBtn">Play MIDI Music</button>
+        <div class="row">
+          <div class="label">Symptoms Severity</div>
+          <div class="meter"><div id="symptomBar" class="bar"></div></div>
+        </div>
+        <div class="row">
+          <div class="label">Foreign Objects Remaining</div>
+          <ul id="objectList"></ul>
+        </div>
+        <div id="status" class="status">Use your mouse like precision forceps. Click an object to remove it. Do not touch the cavity walls.</div>
+        <button id="restartBtn">Restart Surgery</button>
+        <div class="tip">If the tool touches the red wall, health drops and symptoms worsen.</div>
       </section>
-
-      <section class="forecast" id="forecast"></section>
-      <footer class="status" id="status">ENTER A U.S. ZIP CODE TO BEGIN<span class="blink">_</span></footer>
+      <section class="panel">
+        <canvas id="board" width="960" height="600" aria-label="Surgery game board"></canvas>
+      </section>
     </main>
 
     <script>
-      const zipEl = document.getElementById("zip");
-      const btnEl = document.getElementById("fetchBtn");
-      const musicBtn = document.getElementById("musicBtn");
-      const forecastEl = document.getElementById("forecast");
-      const statusEl = document.getElementById("status");
-      const locationTitle = document.getElementById("locationTitle");
+      const canvas = document.getElementById('board');
+      const ctx = canvas.getContext('2d');
+      const healthBar = document.getElementById('healthBar');
+      const symptomBar = document.getElementById('symptomBar');
+      const statusEl = document.getElementById('status');
+      const objectListEl = document.getElementById('objectList');
+      const restartBtn = document.getElementById('restartBtn');
 
-      function updateClock() {
-        const now = new Date();
-        document.getElementById("clock").textContent = now.toLocaleTimeString("en-US", {
-          hour12: true,
-          weekday: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-      }
-      setInterval(updateClock, 1000);
-      updateClock();
+      const body = { x: 120, y: 70, w: 720, h: 460, padding: 28 };
 
-      function setStatus(text) { statusEl.textContent = text; }
+      const names = [
+        'Shard of Glass',
+        'Toy Spring',
+        'Micro Screw',
+        'Fish Hook',
+        'Bent Nail',
+        'Coin Fragment'
+      ];
 
-      async function fetchWeather(zip) {
-        setStatus(`LOOKING UP ZIP ${zip}...`);
-        forecastEl.innerHTML = "";
-        const wRes = await fetch(`/api/weather?zip=${encodeURIComponent(zip)}`);
-        if (!wRes.ok) {
-          const errorPayload = await wRes.json().catch(() => ({}));
-          throw new Error(errorPayload.error || "Unable to reach forecast service.");
-        }
-        return wRes.json();
+      let game;
+      let pointer = { x: 0, y: 0, inside: false };
+
+      function rand(min, max) {
+        return Math.random() * (max - min) + min;
       }
 
-      function renderForecast(data) {
-        const current = data.current;
-        const currentText = current.condition?.text || "Unknown";
-        const place = data.location;
-        locationTitle.textContent = `${place.name}, ${place.region} Weather`;
-        setStatus(
-          `NOW ${Math.round(current.temp_f)}°F (${currentText}) | FEELS ${Math.round(current.feelslike_f)}°F | WIND ${Math.round(current.wind_mph)} MPH | BAROMETRIC PRESSURE ${current.pressure_mb.toFixed(0)} hPa`
+      function initGame() {
+        game = {
+          health: 100,
+          symptoms: 15,
+          ended: false,
+          won: false,
+          objects: names.map((name, i) => ({
+            id: i,
+            name,
+            x: rand(body.x + body.padding + 26, body.x + body.w - body.padding - 26),
+            y: rand(body.y + body.padding + 26, body.y + body.h - body.padding - 26),
+            r: rand(14, 24),
+            rotation: rand(0, Math.PI * 2),
+            removed: false
+          })),
+          hitCooldown: 0
+        };
+        pointer = { x: 0, y: 0, inside: false };
+        setStatus('Scalpel in. Keep a steady hand and remove all foreign objects.');
+        updateHud();
+      }
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function updateHud() {
+        healthBar.style.width = `${Math.max(0, game.health)}%`;
+        symptomBar.style.width = `${Math.min(100, game.symptoms)}%`;
+
+        const remaining = game.objects.filter(o => !o.removed);
+        objectListEl.innerHTML = remaining.map(o => `<li>${o.name}</li>`).join('') || '<li>None</li>';
+      }
+
+      function inInnerCavity(x, y) {
+        return (
+          x > body.x + body.padding &&
+          y > body.y + body.padding &&
+          x < body.x + body.w - body.padding &&
+          y < body.y + body.h - body.padding
         );
-
-        const days = data.forecast.forecastday;
-        const html = days.slice(1, 6).map((item) => {
-          const desc = item.day.condition?.text || "Unknown";
-          const iconUrl = item.day.condition?.icon ? `https:${item.day.condition.icon}` : "";
-          const hi = Math.round(item.day.maxtemp_f);
-          const lo = Math.round(item.day.mintemp_f);
-          const day = new Date(item.date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-
-          return `
-            <article class="card">
-              <div class="day">${day}</div>
-              <div class="icon" aria-hidden="true">${iconUrl ? `<img src="${iconUrl}" alt="" width="48" height="48" />` : "❔"}</div>
-              <div class="desc">${desc}</div>
-              <div class="temps"><span>LO ${lo}</span><span>HI ${hi}</span></div>
-            </article>
-          `;
-        }).join("");
-
-        forecastEl.innerHTML = html;
       }
 
-      btnEl.addEventListener("click", async () => {
-        const zip = zipEl.value.trim();
-        if (!/^\d{5}$/.test(zip)) {
-          setStatus("PLEASE ENTER A VALID 5-DIGIT U.S. ZIP CODE");
+      function inOuterBody(x, y) {
+        return x > body.x && y > body.y && x < body.x + body.w && y < body.y + body.h;
+      }
+
+      function hurtPatient(reason) {
+        if (game.ended) return;
+        game.health -= 7;
+        game.symptoms += 10;
+        setStatus(`Contact with cavity wall! ${reason} Health dropping, symptoms escalating.`);
+
+        if (game.health <= 0) {
+          game.health = 0;
+          game.ended = true;
+          game.won = false;
+          setStatus('Patient died. Malpractice suit filed, license revoked, job lost, and your life collapses into survival in an abandoned Circuit City.');
+        }
+        updateHud();
+      }
+
+      function removeObjectAt(x, y) {
+        if (game.ended) return;
+
+        let hit = false;
+        for (const obj of game.objects) {
+          if (obj.removed) continue;
+          const dx = x - obj.x;
+          const dy = y - obj.y;
+          if (Math.hypot(dx, dy) <= obj.r + 8) {
+            obj.removed = true;
+            hit = true;
+            game.symptoms = Math.max(0, game.symptoms - 12);
+            game.health = Math.min(100, game.health + 4);
+            setStatus(`Removed: ${obj.name}. Patient stabilizing.`);
+            break;
+          }
+        }
+
+        if (!hit) {
+          setStatus('Missed object. Reposition carefully.');
+        }
+
+        const remaining = game.objects.some(o => !o.removed);
+        if (!remaining) {
+          game.ended = true;
+          game.won = true;
+          setStatus('Surgery complete! Every object removed. You are celebrated as the best surgeon and showered with awards and public praise.');
+        }
+
+        updateHud();
+      }
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = ((e.clientX - rect.left) / rect.width) * canvas.width;
+        pointer.y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+        pointer.inside = inOuterBody(pointer.x, pointer.y);
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        pointer.inside = false;
+      });
+
+      canvas.addEventListener('click', () => {
+        if (game.ended) return;
+
+        if (pointer.inside && !inInnerCavity(pointer.x, pointer.y)) {
+          hurtPatient('You scraped tissue while attempting extraction.');
           return;
         }
 
-        try {
-          const data = await fetchWeather(zip);
-          renderForecast(data);
-        } catch (err) {
-          setStatus(`ERROR: ${err.message}`);
+        if (inInnerCavity(pointer.x, pointer.y)) {
+          removeObjectAt(pointer.x, pointer.y);
         }
       });
 
-      zipEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") btnEl.click();
-      });
+      restartBtn.addEventListener('click', initGame);
 
-      let midiAudio;
-      function startAmbient() {
-        if (!midiAudio) {
-          midiAudio = new Audio("https://onlinesequencer.net/4778297.mid");
-          midiAudio.loop = true;
-          midiAudio.volume = 0.3;
+      function drawBoard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Backdrop grid
+        ctx.fillStyle = '#0d1424';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        for (let x = 0; x < canvas.width; x += 30) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
         }
-        midiAudio.play().catch(() => {
-          setStatus("MIDI playback failed. Your browser may not support .mid audio streaming.");
-        });
-        musicBtn.textContent = "Pause MIDI Music";
+
+        // Body area
+        ctx.fillStyle = '#ffd7c2';
+        ctx.fillRect(body.x, body.y, body.w, body.h);
+
+        // Dangerous edge
+        ctx.strokeStyle = '#ff4d4d';
+        ctx.lineWidth = body.padding * 2;
+        ctx.strokeRect(body.x + body.padding / 2, body.y + body.padding / 2, body.w - body.padding, body.h - body.padding);
+
+        // Safe cavity
+        ctx.fillStyle = '#7d2a2a';
+        ctx.fillRect(body.x + body.padding, body.y + body.padding, body.w - body.padding * 2, body.h - body.padding * 2);
+
+        // Objects
+        for (const obj of game.objects) {
+          if (obj.removed) continue;
+          ctx.save();
+          ctx.translate(obj.x, obj.y);
+          ctx.rotate(obj.rotation);
+          ctx.fillStyle = '#d7ecff';
+          ctx.strokeStyle = '#325a84';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.roundRect(-obj.r, -obj.r * 0.4, obj.r * 2, obj.r * 0.8, 5);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Pointer tool
+        if (pointer.inside && !game.ended) {
+          const risky = !inInnerCavity(pointer.x, pointer.y);
+          ctx.strokeStyle = risky ? '#ff8080' : '#8df7ad';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(pointer.x, pointer.y, 11, 0, Math.PI * 2);
+          ctx.stroke();
+
+          if (risky) {
+            if (game.hitCooldown <= 0) {
+              hurtPatient('Continuous pressure on the cavity wall detected.');
+              game.hitCooldown = 12;
+            }
+          }
+        }
+
+        if (game.hitCooldown > 0) game.hitCooldown -= 1;
+
+        if (game.ended) {
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.font = '700 46px system-ui';
+          ctx.fillText(game.won ? 'SUCCESS' : 'MALPRACTICE', canvas.width / 2, canvas.height / 2 - 10);
+          ctx.font = '400 22px system-ui';
+          ctx.fillText(game.won ? 'All foreign objects removed.' : 'Patient lost. Career over.', canvas.width / 2, canvas.height / 2 + 30);
+        }
       }
 
-      function pauseAmbient() {
-        if (midiAudio) midiAudio.pause();
-        musicBtn.textContent = "Play MIDI Music";
+      function loop() {
+        drawBoard();
+        requestAnimationFrame(loop);
       }
 
-      musicBtn.addEventListener("click", async () => {
-        if (!midiAudio || midiAudio.paused) startAmbient();
-        else pauseAmbient();
-      });
+      initGame();
+      loop();
     </script>
   </body>
 </html>
